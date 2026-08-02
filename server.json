@@ -1,0 +1,16 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.tarang8811/getintel",
+  "description": "Manage GetIntel AI visibility (GEO) from your own AI agent.",
+  "repository": {
+    "url": "https://github.com/tarang8811/getintel-mcp",
+    "source": "github"
+  },
+  "version": "1.0.1",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://app.getintel.ai/mcp"
+    }
+  ]
+}

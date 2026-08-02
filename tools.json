@@ -1,0 +1,206 @@
+{
+  "server": "io.github.tarang8811/getintel",
+  "url": "https://app.getintel.ai/mcp",
+  "protocolVersion": "2024-11-05",
+  "tools": [
+    {
+      "name": "get_visibility",
+      "scope": "read",
+      "description": "Get the AI Visibility score (0-100) — how often AI named the brand across the last 7 days of scans (a stable trailing average, not a single day). score is NULL when nothing was measured; 0 means AI answered and named the brand nowhere. Also returns scans_in_window and prompts_observed (the confidence behind the score), the change vs the previous 7-day window, and up to 12 points of history.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "get_ai_answers",
+      "scope": "read",
+      "description": "See which buyer questions AI search engines were asked and, for each, the RATE the brand was named across the last 7 days of scans (over runs_counted) plus the per-engine state: 'open' (AI named no product at all — a winnable slot), 'absent' (AI named others, not this brand), 'mentioned', 'recommended', 'no_answer', or 'error' (the run failed).",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "get_receipts",
+      "scope": "read",
+      "description": "Get the exact answer each AI engine gave for one buyer question over the last 7 days, and how many of the (non-errored) runs named the brand.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "prompt": { "type": "string", "description": "The exact buyer question text, as returned by get_ai_answers." } },
+        "required": ["prompt"]
+      }
+    },
+    {
+      "name": "list_activity",
+      "scope": "read",
+      "description": "List recent things the agent found or did — signals, approvals, drafts, outcomes — most recent first.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max rows to return. Default 20." },
+          "category": { "type": "string", "enum": ["watch", "act", "outcomes"], "description": "Optional category filter." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "list_missions",
+      "scope": "read",
+      "description": "List missions the agent has proposed or is running — batches of related opportunities waiting for approval.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "state": { "type": "string", "enum": ["proposed", "approved", "executing", "completed", "cancelled", "failed"] } },
+        "required": []
+      }
+    },
+    {
+      "name": "get_mission",
+      "scope": "read",
+      "description": "Read-only preview of one mission: the buyer opportunities it bundles and any drafts already written — WITHOUT running it. Use this to inspect a mission before the irreversible approve_mission.",
+      "inputSchema": { "type": "object", "properties": { "mission_id": { "type": "integer" } }, "required": ["mission_id"] }
+    },
+    {
+      "name": "get_competitors",
+      "scope": "read",
+      "description": "Share-of-voice board: how often each AI engine names the brand vs each competitor over the last 30 days — who's winning, and on which buyer prompts.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "get_prompt_matrix",
+      "scope": "read",
+      "description": "The per-prompt × per-engine matrix. For each buyer question, each engine's DOMINANT state over the last 7 days (open/absent/mentioned/recommended/no_answer) + the rate behind it, the brand's position when named, plus a visibility count of how many engines named the brand. no_answer means the engine returned nothing to read (failed call, or Google rendered no AI Overview) — it is NOT an open slot.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "get_sources",
+      "scope": "read",
+      "description": "Which domains the AI engines cite in the brand's category, how often, and whether each is the brand's own / a competitor's / third-party — where to get published to earn citations.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "limit": { "type": "integer", "description": "Max sources to return (1-50, default 15)." } },
+        "required": []
+      }
+    },
+    {
+      "name": "get_content_gaps",
+      "scope": "read",
+      "description": "Topic coverage: for each buyer question, whether the brand has a page, whether AI cites it, the recommended action (write / improve / leave), and (for gaps) a page_type hint — commerce_page vs editorial — for ecommerce/local/hybrid brands.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "get_signals",
+      "scope": "read",
+      "description": "Recent Reddit + X signals the agent surfaced — buyer threads AI already cites where the brand is absent, competitor complaints, and ICP discovery posts.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "limit": { "type": "integer", "description": "Max signals to return (1-50, default 20)." } },
+        "required": []
+      }
+    },
+    {
+      "name": "get_search_console",
+      "scope": "read",
+      "description": "Google Search Console performance joined against the tracked prompt set, so you can find pages and queries that rank on Google but that AI never cites. Returns totals (clicks, impressions, ctr, impression-weighted avg_position), a rows array, and ranks_but_never_cited — rows in the top 10 of Google that AI cited zero times. With dimension=\"page\", each Search Console URL is matched exactly against the URLs AI cited (tracking params and www. normalized away). With dimension=\"query\", the keyword is matched to a tracked prompt by normalized substring containment. Errors clearly if Search Console is not connected or the grant was revoked.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "days": { "type": "integer", "description": "Trailing window in days (1-90, default 28)." },
+          "dimension": { "type": "string", "enum": ["query", "page"], "description": "\"query\" for keywords, \"page\" for URLs. Default \"query\"." },
+          "limit": { "type": "integer", "description": "Max rows to return, ranked by impressions (1-100, default 25)." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "get_authority",
+      "scope": "read",
+      "description": "Link authority for the brand's domain: domain_rating, referring_domains, backlinks, and net new referring domains over 7/30 days. Also returns link_opportunities — high-DR link targets and listing directories, ranked by domain rating, with directories the brand has already submitted to filtered out.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "limit": { "type": "integer", "description": "Max link targets and directories to return, each (1-50, default 10)." },
+          "category": { "type": "string", "description": "Optional category filter applied to both dr_targets and directories." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "get_brand",
+      "scope": "read",
+      "description": "Does AI know this brand, and would it recommend it when asked — the trust/reputation signal (distinct from get_visibility's raw citation rate, which has no sentiment). Reads the last stored weekly run, not a live probe. Deliberately lightweight — verdicts/labels/scores only, not the full AI answer text; call get_brand_transcript for that.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "get_brand_transcript",
+      "scope": "read",
+      "description": "The full text get_brand leaves out: the complete prompt/answer/citations for every turn actually run (findability, blind ask, named follow-up) — real, untruncated AI answer text, not a summary.",
+      "inputSchema": {
+        "type": "object",
+        "properties": { "engine": { "type": "string", "description": "Optional — one of openai/perplexity/gemini_direct/google_aio. Omit to get all engines' transcripts." } },
+        "required": []
+      }
+    },
+    {
+      "name": "get_crawlability",
+      "scope": "read",
+      "description": "Can AI reach and read the site at all — the technical prerequisite layer underneath both get_visibility and get_brand. 12 pass/warn/fail checks (SSL, robots.txt, firewall, response time, llms.txt, sitemap.xml, JS-only rendering, noindex, snippet blocking, entity schema, FAQ/HowTo schema, title/meta) run against the homepage plus a second page from the sitemap.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "get_usage",
+      "scope": "read",
+      "description": "This month's MCP budget: reads and drafts used / limit / remaining, and when it resets.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "get_prompt_history",
+      "scope": "read",
+      "description": "Per-prompt movement: which buyer questions you WON, LOST, or held between the current 7-day window and the window a full 7 days earlier, with the mention rate in each.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "list_drafts",
+      "scope": "read",
+      "description": "List drafts the agent has written — outreach emails, blog pitches, llms.txt / schema drafts, Reddit replies. Summary rows; call get_draft for the full text.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "state": { "type": "string", "enum": ["draft", "approved", "copied_to_clipboard", "sent", "discarded"] },
+          "limit": { "type": "integer", "description": "Max drafts to return (1-50, default 20)." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "get_draft",
+      "scope": "read",
+      "description": "Get the FULL content of one draft — the actual article / llms.txt / schema / reply text the agent generated, so you can ship it.",
+      "inputSchema": { "type": "object", "properties": { "draft_id": { "type": "integer" } }, "required": ["draft_id"] }
+    },
+    {
+      "name": "approve_mission",
+      "scope": "act",
+      "description": "Approve one mission. This runs the ENTIRE batch headlessly right now — drafts get written; outbound sends still require the user's send mandate to already be on. Not reversible once it executes.",
+      "inputSchema": { "type": "object", "properties": { "mission_id": { "type": "integer" } }, "required": ["mission_id"] }
+    },
+    {
+      "name": "dismiss_mission",
+      "scope": "act",
+      "description": "Dismiss a proposed mission without running it.",
+      "inputSchema": { "type": "object", "properties": { "mission_id": { "type": "integer" } }, "required": ["mission_id"] }
+    },
+    {
+      "name": "replan",
+      "scope": "act",
+      "description": "Ask the agent to re-scan current signals and propose fresh missions right now, instead of waiting for the weekly scan.",
+      "inputSchema": { "type": "object", "properties": {}, "required": [] }
+    },
+    {
+      "name": "approve_event",
+      "scope": "act",
+      "description": "Approve one individual finding (not a whole mission) — writes its draft/article. Use for a single item rather than a batch.",
+      "inputSchema": { "type": "object", "properties": { "event_id": { "type": "integer" } }, "required": ["event_id"] }
+    },
+    {
+      "name": "dismiss_event",
+      "scope": "act",
+      "description": "Dismiss one individual finding.",
+      "inputSchema": { "type": "object", "properties": { "event_id": { "type": "integer" } }, "required": ["event_id"] }
+    }
+  ]
+}
