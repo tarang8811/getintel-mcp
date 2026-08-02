@@ -1,5 +1,7 @@
 # GetIntel MCP Connector
 
+[![smithery badge](https://smithery.ai/badge/tarang8811/getintel)](https://smithery.ai/servers/tarang8811/getintel)
+
 [GetIntel](https://app.getintel.ai) is an AI visibility (GEO) platform — it tracks how often
 ChatGPT, Perplexity, Gemini, and Google AI Overviews name your brand in buyer conversations,
 finds the gaps, and drafts the fixes. This connector lets your own AI agent (Claude, or any
